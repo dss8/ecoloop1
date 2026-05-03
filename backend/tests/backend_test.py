@@ -100,6 +100,7 @@ class TestSavedDesignsCRUD:
         assert isinstance(r.json(), list)
 
     def test_create_saved_design(self, auth_client, generated_image_b64):
+        canvas_json_payload = '{"elements":[{"id":"el_1","type":"text","text":"TEST"}],"view":"front"}'
         payload = {
             "prompt": "TEST minimal pine logo",
             "image_base64": generated_image_b64,
@@ -107,6 +108,7 @@ class TestSavedDesignsCRUD:
             "text": "TEST_LABEL",
             "text_color": "#ffffff",
             "material": "Organic Cotton",
+            "canvas_json": canvas_json_payload,
         }
         r = auth_client.post(f"{API}/saved-designs", json=payload, timeout=30)
         assert r.status_code == 200, r.text
@@ -114,6 +116,7 @@ class TestSavedDesignsCRUD:
         assert d["uid"] == TEST_UID
         assert d["prompt"] == payload["prompt"]
         assert d["text"] == "TEST_LABEL"
+        assert d.get("canvas_json") == canvas_json_payload, "canvas_json must round-trip"
         assert "id" in d
         TestSavedDesignsCRUD._created_id = d["id"]
 
@@ -121,8 +124,12 @@ class TestSavedDesignsCRUD:
         assert TestSavedDesignsCRUD._created_id, "prior create test must pass"
         r = auth_client.get(f"{API}/saved-designs", timeout=15)
         assert r.status_code == 200
-        ids = [row["id"] for row in r.json()]
+        rows = r.json()
+        ids = [row["id"] for row in rows]
         assert TestSavedDesignsCRUD._created_id in ids
+        # Verify canvas_json persisted to DB
+        match = next(row for row in rows if row["id"] == TestSavedDesignsCRUD._created_id)
+        assert match.get("canvas_json") and "elements" in match["canvas_json"]
 
     def test_delete_saved_design(self, auth_client):
         cid = TestSavedDesignsCRUD._created_id

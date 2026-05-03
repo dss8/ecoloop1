@@ -14,6 +14,7 @@ import DashboardPage from '@/pages/DashboardPage';
 import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import CheckoutPage from '@/pages/CheckoutPage';
 import CheckoutSuccessPage from '@/pages/CheckoutSuccessPage';
+import DesignHistoryPage from '@/pages/DesignHistoryPage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -54,6 +55,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/design-history"
+                element={
+                  <ProtectedRoute>
+                    <DesignHistoryPage />
                   </ProtectedRoute>
                 }
               />

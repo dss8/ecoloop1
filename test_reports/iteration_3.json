@@ -1,0 +1,52 @@
+{
+  "summary": "Iteration-3 testing of new Konva Design Studio, Design History, and Reviews. Backend: 15/15 pytest tests PASS including new canvas_json persistence assertion. Frontend: Studio UI fully renders (all 16 required testids present), element add/duplicate/delete/layer-ordering/front-back/color-swatch/AI-tab all work. Properties panel correctly shows text-specific props only when a text element is selected. Reviews on /product/1 render with 4 seed reviews and a new review persists to localStorage. Design History page renders, edit navigates to /design-studio?edit={id} and loads saved canvas, delete removes row after accepting confirm(). One CRITICAL usability regression: Save design returns 401 'Authentication required' because /frontend/src/lib/api.ts falls back to localStorage 'ecoloop-dev-uid' which is never written by any login flow — end-users who click Save without manually injecting the key will see the failure toast. Verified the full save/history/edit/delete chain works once the UID is seeded.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "api.ts dev-trust fallback / DesignStudioPage save flow",
+        "issue": "POST /api/saved-designs is sent with NO X-User-Id header when Firebase is unconfigured, so backend returns 401 and toast shows 'Authentication required' instead of 'Design saved to history!'. The code in /app/frontend/src/lib/api.ts reads localStorage.getItem('ecoloop-dev-uid') but NO login/signup page writes that key (confirmed via grep). Net effect: a user who has never opened devtools cannot save any design in dev-trust mode.",
+        "selector": "[data-testid=save-design-button]",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Save design → Design History → Edit → Delete",
+        "issue": "Entire chain fails at step 1 for default users (see ui_bugs above). Manually seeding localStorage.ecoloop-dev-uid makes the chain pass end-to-end (save toast, history list, edit loads canvas with 1 layer, delete removes after confirm()).",
+        "affected_selectors": ["[data-testid=save-design-button]", "[data-testid=design-history-page]", "[data-testid^=edit-design-]", "[data-testid^=delete-design-]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "[HIGH] Fix Design Studio save for dev-trust mode. Easiest fix: in LoginPage/SignupPage (and/or AuthStore) when Firebase is not configured, write a stable uid to localStorage 'ecoloop-dev-uid' on any form submit — OR auto-seed a uid on app bootstrap (e.g. in main.tsx) so that Save works out-of-the-box. Alternatively, have /app/frontend/src/lib/api.ts generate and persist a random uid when neither a Firebase user nor a cached uid is found, so users in dev-trust mode can save designs without touching devtools.",
+    "[OPTIONAL] Add a visible 'dev mode signed in as X' pill in Navbar when running without Firebase, so the UX matches the implicit uid."
+  ],
+  "critical_code_review_comments": [
+    "/app/frontend/src/lib/api.ts line 37 reads 'ecoloop-dev-uid' from localStorage but no source in repo writes to that key (grep confirms dead fallback). Either wire up the dev auth pages to write it, or fallback-generate-and-persist a uid inline.",
+    "DesignHistoryPage uses window.confirm() for delete — works, but consider a shadcn AlertDialog for consistency (still functional).",
+    "SavedDesign.canvas_json is Optional[str] and round-trips correctly (verified in backend test).",
+    "Konva renders to <canvas>; Layers panel correctly reflects state, and no JS errors were produced during add/duplicate/reorder/delete/front-back/color-swatch/AI-tab interactions."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "90%"
+  },
+  "test_credentials": "Firebase intentionally not configured. Backend dev-trust mode uses X-User-Id header. To make Save work end-to-end, seed localStorage.setItem('ecoloop-dev-uid', 'demo_user_abc') before clicking save-design-button.",
+  "seed_data_creation": "backend_test.py creates per-run TEST_UID saved_designs (deleted by test), plus one payment_transactions+orders row (not cleaned, TEST_UID-scoped). UI test created and deleted one saved_design under uid 'demo_user_test_3' and appended one TEST review to localStorage on /product/1.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 16 studio toolbar + panel testids present and functional. Text properties only show when a TEXT layer is selected (by design). Layers panel is newest-on-top. The blocker for iteration-3 is the missing ecoloop-dev-uid seed — once main agent fixes this (or uses real Firebase), retest only the save/history/edit/delete chain. Backend needs no change; canvas_json already persists.",
+  "rca of the issue": "Save-design 401 RCA — Steps to reproduce: (1) visit /design-studio in a fresh browser, (2) add any element, (3) click save-design-button. Expected: toast 'Design saved to history!' and new entry in /design-history. Actual: toast 'Authentication required'. Root cause: /app/frontend/src/lib/api.ts:37 reads localStorage key 'ecoloop-dev-uid', but no code path in the repo ever writes that key (grep 'ecoloop-dev-uid' returns only the reader). With Firebase intentionally unconfigured per memory/test_credentials.md, firebaseAuth.currentUser is null, so the request goes without any auth header, and backend get_current_user raises 401. Mitigation options — (a) in LoginPage.tsx / SignupPage.tsx set localStorage.setItem('ecoloop-dev-uid', <email-or-uuid>) on submit when firebase is not configured; (b) in main.tsx or api.ts lazily generate-and-persist a uid when none exists; (c) document a Navbar action that seeds the uid. Verified manually: after `localStorage.setItem('ecoloop-dev-uid','demo_user_test_3')` the complete save → history → edit → delete flow works without error."
+}

@@ -76,6 +76,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2 lg:gap-4">
             <Link
               to="/design-studio"
+              data-testid="navbar-studio-link"
               className={`hidden lg:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 isActive('/design-studio')
                   ? 'bg-[#83f0c7]/20 text-[#83f0c7]'
@@ -84,6 +85,18 @@ export default function Navbar() {
             >
               <Sparkles className="w-4 h-4" />
               AI Studio
+            </Link>
+
+            <Link
+              to="/design-history"
+              data-testid="navbar-history-link"
+              className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                isActive('/design-history')
+                  ? 'bg-[#83f0c7]/20 text-[#83f0c7]'
+                  : 'text-white/70 hover:text-[#83f0c7] hover:bg-white/5'
+              }`}
+            >
+              History
             </Link>
 
             <Link

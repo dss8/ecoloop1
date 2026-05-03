@@ -153,6 +153,7 @@ class SavedDesign(BaseModel):
     text: str = ""
     text_color: str = "#ffffff"
     material: str = "Organic Cotton"
+    canvas_json: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -163,6 +164,7 @@ class SaveDesignRequest(BaseModel):
     text: str = ""
     text_color: str = "#ffffff"
     material: str = "Organic Cotton"
+    canvas_json: Optional[str] = None
 
 
 class CartItem(BaseModel):

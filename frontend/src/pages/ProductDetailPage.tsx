@@ -4,6 +4,7 @@ import { Star, Leaf, Heart, ShoppingCart, Truck, Shield, RefreshCw, ChevronRight
 import { products } from '@/data/products';
 import { useStore } from '@/stores/useStore';
 import { toast } from 'sonner';
+import ReviewsSection from '@/components/ReviewsSection';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -340,6 +341,9 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Reviews */}
+        <ReviewsSection productId={product.id} />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
