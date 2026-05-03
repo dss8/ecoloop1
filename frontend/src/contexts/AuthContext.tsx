@@ -66,6 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       configured: isFirebaseConfigured,
       signOut: async () => {
         if (firebaseAuth) await fbLogOut();
+        try {
+          localStorage.removeItem("ecoloop-dev-uid");
+          localStorage.removeItem("ecoloop-dev-email");
+        } catch {
+          /* ignore */
+        }
         clearStoreUser();
       },
     }),

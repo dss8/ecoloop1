@@ -31,8 +31,19 @@ export default function SignupPage() {
       return;
     }
     if (!isFirebaseConfigured) {
-      toast.error('Firebase is not configured. Add VITE_FIREBASE_* env vars to /app/frontend/.env');
-      setErrorMsg('Auth backend not configured. Please contact the admin.');
+      // Dev-mode: simulate a local signup
+      const cleanEmail = email.trim();
+      const devUid = "dev_" + cleanEmail.replace(/[^a-z0-9]/gi, "_").slice(0, 24);
+      localStorage.setItem("ecoloop-dev-uid", devUid);
+      localStorage.setItem("ecoloop-dev-email", cleanEmail);
+      storeLogin({
+        name: name || cleanEmail.split("@")[0] || "Eco User",
+        email: cleanEmail,
+        phone: "",
+        avatar: "",
+      });
+      toast.success("Account created (dev mode)");
+      navigate("/dashboard");
       return;
     }
 

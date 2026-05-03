@@ -11,8 +11,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user: fbUser, signOut, configured } = useAuth();
-  const { user: storeUser, cartCount, wishlist } = useStore();
-  const isLoggedIn = configured ? Boolean(fbUser) : false;
+  const { user: storeUser, cartCount, wishlist, isLoggedIn: storeIsLoggedIn } = useStore();
+  // In real mode, trust Firebase. In dev mode, trust the local store.
+  const isLoggedIn = configured ? Boolean(fbUser) : storeIsLoggedIn;
   const user = fbUser
     ? {
         name: fbUser.displayName || (fbUser.email ? fbUser.email.split('@')[0] : 'Eco User'),
