@@ -21,7 +21,7 @@ export default function CartPage() {
           <h2 className="text-2xl font-bold text-[#fffefa] mb-2">Your cart is empty</h2>
           <p className="text-sm text-white/50 mb-6">Looks like you have not added any eco-friendly tees yet</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/products" className="btn-primary">Browse Products</Link>
+            <Link to="/products" className="btn-primary" data-testid="continue-shopping-button">Continue Shopping</Link>
             <Link to="/design-studio" className="btn-secondary">Create Custom Design</Link>
           </div>
         </div>

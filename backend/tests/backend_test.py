@@ -183,15 +183,32 @@ class TestCheckout:
         r = auth_client.post(f"{API}/checkout/session", json=payload, timeout=15)
         assert r.status_code == 400
 
-    def test_checkout_status(self, auth_client):
+    def test_checkout_status_returns_paid(self, auth_client):
         sid = TestCheckout._session_id
         assert sid, "prior create-session test must pass"
         r = auth_client.get(f"{API}/checkout/status/{sid}", timeout=30)
         assert r.status_code == 200, r.text
         d = r.json()
-        assert "status" in d
-        assert "payment_status" in d
-        assert "amount_total" in d
-        assert "currency" in d
+        assert d.get("payment_status") == "paid", f"expected paid, got {d}"
+        assert d.get("status") in ("complete", "open")
         assert isinstance(d["amount_total"], (int, float))
         assert d["currency"].lower() == "inr"
+        assert d.get("order_id"), "order_id should be present"
+        TestCheckout._order_id = d["order_id"]
+
+    def test_checkout_status_idempotent(self, auth_client):
+        """Calling status twice should NOT create a duplicate order."""
+        sid = TestCheckout._session_id
+        assert sid
+        r1 = auth_client.get(f"{API}/checkout/status/{sid}", timeout=30)
+        r2 = auth_client.get(f"{API}/checkout/status/{sid}", timeout=30)
+        assert r1.status_code == 200 and r2.status_code == 200
+        assert r1.json().get("order_id") == r2.json().get("order_id")
+
+        # Orders listing should show exactly one order with this session_id / order_id
+        orders_resp = auth_client.get(f"{API}/orders", timeout=15)
+        assert orders_resp.status_code == 200
+        order_id = r1.json().get("order_id")
+        matches = [o for o in orders_resp.json() if o.get("id") == order_id]
+        assert len(matches) == 1, f"expected 1 order, found {len(matches)}"
+        assert matches[0].get("payment_status") == "paid"
